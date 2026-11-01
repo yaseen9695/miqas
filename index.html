@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="مقاس">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>مقاس ثلاثي الأبعاد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&family=Tajawal:wght@900&family=Changa:wght@800&family=El+Messiri:wght@700&family=Reem+Kufi:wght@500;700&family=Lalezar&family=Lemonada:wght@700&family=Marhey:wght@700&family=Rakkas&family=Aref+Ruqaa:wght@700&family=Amiri:wght@700&family=Mada:wght@900&family=Pacifico&family=Lobster&family=Fredoka:wght@700&family=Bebas+Neue&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky 3D build-plate viewer on top, workshop control sheet below (phone-first, RTL) */
+:root{
+  --bg:#eef0ec; --panel:#f8f9f6; --ink:#1c2420; --muted:#5d6a63; --line:#d5dbd4;
+  --accent:#a8642a; --accent-ink:#ffffff; --plate:#d9ddd5; --chip:#e3e7e0; --warn:#9a3b22;
+  --display:"Reem Kufi","Cairo",system-ui,sans-serif;
+  --body:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141816; --panel:#1b201d; --ink:#e7ebe6; --muted:#98a59d; --line:#2c3430;
+  --accent:#d99452; --accent-ink:#1b1206; --plate:#222924; --chip:#242b27; --warn:#e58b6b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141816; --panel:#1b201d; --ink:#e7ebe6; --muted:#98a59d; --line:#2c3430;
+  --accent:#d99452; --accent-ink:#1b1206; --plate:#222924; --chip:#242b27; --warn:#e58b6b; color-scheme:dark}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:4px 10px}
+h1{font-family:var(--display);font-weight:700;font-size:1.6rem;margin:0;letter-spacing:0;text-wrap:balance}
+h1 small{font-family:var(--mono);font-size:.75rem;color:var(--muted);margin-inline-start:6px;font-weight:500}
+.sub{color:var(--muted);font-size:.85rem;margin:0}
+.layout{display:grid;gap:16px}
+@media (min-width:860px){.layout{grid-template-columns:1.2fr 1fr;align-items:start}.viewer{top:calc(env(safe-area-inset-top,0px) + 12px)}}
+.viewer{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:4px}
+.stage{position:relative;height:44vh;min-height:260px;max-height:520px;border-radius:14px;overflow:hidden;background:var(--plate);border:1px solid var(--line)}
+@media (min-width:860px){.stage{height:560px;max-height:none}}
+.stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.hud{position:absolute;inset:auto 10px 10px 10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;flex-wrap:wrap}
+.tag{background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-family:var(--mono);font-size:.78rem;direction:ltr;font-variant-numeric:tabular-nums}
+.tag.warn{color:var(--warn);border-color:var(--warn)}
+.swatches{position:absolute;top:10px;inset-inline-start:10px;display:flex;gap:6px}
+.sw{width:22px;height:22px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
+.resetv{position:absolute;top:10px;inset-inline-end:10px;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:8px;font:inherit;font-size:.8rem;padding:3px 10px;cursor:pointer}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-block:2px 4px;scrollbar-width:none}
+.tab{flex:0 0 auto;border:1px solid var(--line);background:var(--chip);color:var(--ink);font:inherit;font-weight:500;border-radius:10px;padding:8px 14px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:14px;min-width:0}
+.group h2{font-family:var(--display);font-weight:500;font-size:1rem;margin:0 0 6px;color:var(--muted)}
+.rows{display:grid;gap:10px}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.row label{font-weight:500;font-size:.92rem}
+.num{display:flex;align-items:center;gap:4px;direction:ltr}
+.num input{width:64px;font:inherit;font-family:var(--mono);font-size:.9rem;text-align:center;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:3px 4px}
+.num span{font-size:.75rem;color:var(--muted)}
+.row input[type=range]{grid-column:1 / -1;width:100%;accent-color:var(--accent);margin:0}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:.88rem;border-radius:8px;padding:5px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.textin{width:100%;box-sizing:border-box;font:inherit;font-size:1.05rem;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);padding:8px 10px}
+.note{font-size:.82rem;color:var(--muted);margin:0}
+.note.warn{color:var(--warn)}
+.export{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;font:inherit;font-weight:600;padding:11px 18px;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.tips{margin:0;padding-inline-start:18px;color:var(--muted);font-size:.86rem;display:grid;gap:2px}
+/* name tool */
+.fonts{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.fontbtn{display:grid;gap:2px;justify-items:center;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:8px 6px;cursor:pointer;min-width:0}
+.fontbtn[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.fontbtn .fs{font-size:1.45rem;line-height:1.5;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fontbtn .fl{font-size:.72rem;color:var(--muted)}
+.colorrow{display:grid;gap:6px}
+.colorrow .cl{font-weight:500;font-size:.92rem}
+.swrow{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.swrow .sw{width:28px;height:28px}
+.pick{width:34px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:1px;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="wrap" dir="rtl" lang="ar">
+  <header>
+    <h1>مقاس <small>أسماء</small></h1>
+    <p class="sub">لوحات وميداليات أسماء متعددة الألوان، جاهزة للطباعة</p>
+  </header>
+  <div class="layout">
+    <div class="viewer">
+      <div class="stage" id="stage">
+        <button class="resetv" id="resetView" type="button">توسيط</button>
+        <div class="hud"><span class="tag" id="dims">—</span><span class="tag" id="fit">—</span></div>
+      </div>
+    </div>
+    <div style="display:grid;gap:12px;min-width:0">
+      <div class="sheet">
+        <div class="group">
+          <h2>الاسم</h2>
+          <input class="textin" id="text" type="text" dir="auto" maxlength="30" autocomplete="off">
+        </div>
+        <div class="group">
+          <h2>الخط</h2>
+          <div class="fonts" id="fonts" role="group" aria-label="الخط"></div>
+        </div>
+      </div>
+      <div class="sheet" id="shapeSheet"></div>
+      <div class="sheet">
+        <div class="group"><h2>الألوان</h2><div class="rows" id="colors"></div></div>
+        <p class="note">كل لون يطلع كقطعة منفصلة داخل ملف التصدير، وتعيّن لها خامتها في Bambu Studio.</p>
+      </div>
+      <div class="sheet">
+        <div class="export">
+          <button class="btn" id="exportBtn" type="button">تصدير للطباعة</button>
+          <p class="note" id="exportNote">ملف ZIP فيه STL لكل لون.</p>
+        </div>
+        <div class="group"><h2>طريقة الطباعة بأكثر من لون</h2>
+          <ol class="tips">
+            <li>فك ضغط الملف، واسحب كل ملفات STL مع بعض إلى Bambu Studio.</li>
+            <li>لما يسألك "Load these files as a single object with multiple parts?" اضغط <b>Yes</b>.</li>
+            <li>من قائمة الأجزاء على اليسار، اختر لكل جزء خامته (اللون) من الـ AMS.</li>
+            <li>بدون AMS: اطبع ملف القاعدة لحاله، أو استخدم تغيير اللون (Color change) عند بداية كل طبقة جديدة.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script>
+// ===== pure geometry core (no three.js) =====
+function rrPoints(L, W, R, d, seg) {
+  const r = Math.max(R + d, 0.05), cx = L / 2 - R, cy = W / 2 - R, out = [];
+  const corners = [[cx, cy, 0], [-cx, cy, 90], [-cx, -cy, 180], [cx, -cy, 270]];
+  for (const [ox, oy, a0] of corners) {
+    for (let k = 0; k <= seg; k++) {
+      const a = (a0 + 90 * k / seg) * Math.PI / 180;
+      out.push([ox + r * Math.cos(a), oy + r * Math.sin(a)]);
+    }
+  }
+  return out;
+}
+function arcPts(cx, cz, r, a0, a1, n) {
+  const p = [];
+  for (let k = 0; k <= n; k++) { const a = (a0 + (a1 - a0) * k / n) * Math.PI / 180; p.push([cx + r * Math.cos(a), cz + r * Math.sin(a)]); }
+  return p;
+}
+function dedupe(prof) {
+  const o = [];
+  for (const p of prof) { const q = o[o.length - 1]; if (!q || Math.hypot(p[0] - q[0], p[1] - q[1]) > 1e-6) o.push(p); }
+  return o;
+}
+// sweep a (d,z) profile around a rounded rectangle; caps on first & last ring
+function sweepRR(L, W, R, profile, seg) {
+  profile = dedupe(profile);
+  const rings = profile.map(([d, z]) => rrPoints(L, W, R, d, seg).map(([x, y]) => [x, y, z]));
+  const n = rings[0].length, T = [];
+  for (let j = 0; j < rings.length - 1; j++) for (let i = 0; i < n; i++) {
+    const a = rings[j][i], b = rings[j][(i + 1) % n], c = rings[j + 1][(i + 1) % n], e = rings[j + 1][i];
+    T.push(a, b, c, a, c, e);
+  }
+  const f = rings[0], l = rings[rings.length - 1];
+  const c0 = [0, 0, f[0][2]], c1 = [0, 0, l[0][2]];
+  for (let i = 0; i < n; i++) { T.push(c0, f[(i + 1) % n], f[i]); T.push(c1, l[i], l[(i + 1) % n]); }
+  return orient(T);
+}
+function signedVolume(T) {
+  let v = 0;
+  for (let i = 0; i < T.length; i += 3) {
+    const [a, b, c] = [T[i], T[i + 1], T[i + 2]];
+    v += a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0]) + a[2] * (b[0] * c[1] - b[1] * c[0]);
+  }
+  return v / 6;
+}
+function orient(T) {
+  if (signedVolume(T) < 0) for (let i = 0; i < T.length; i += 3) { const t = T[i + 1]; T[i + 1] = T[i + 2]; T[i + 2] = t; }
+  return T;
+}
+function cuboid(x0, x1, y0, y1, z0, z1) {
+  const v = [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0], [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]];
+  const f = [[0, 2, 1], [0, 3, 2], [4, 5, 6], [4, 6, 7], [0, 1, 5], [0, 5, 4], [1, 2, 6], [1, 6, 5], [2, 3, 7], [2, 7, 6], [3, 0, 4], [3, 4, 7]];
+  const T = []; for (const t of f) T.push(v[t[0]], v[t[1]], v[t[2]]); return orient(T);
+}
+// edge profile helpers: returns points going from horizontal face to vertical face
+// box body
+function boxProfile(p) {
+  const { H, wall: w, bottom: b, edge: e0, style } = p;
+  const e = style === 'none' ? 0 : Math.min(e0, H / 3);
+  const rim = style === 'none' ? 0 : Math.min(e0, w / 2);
+  const fi = style === 'none' ? 0 : Math.min(e0, (H - b) / 3);
+  const P = [];
+  if (style === 'round') {
+    P.push(...arcPts(-e, e, e, -90, 0, 8));
+    P.push(...arcPts(-rim, H - rim, rim, 0, 90, 5));
+    P.push(...arcPts(-w + rim, H - rim, rim, 90, 180, 5));
+    P.push(...arcPts(-w - fi, b + fi, fi, 0, -90, 8));
+  } else if (style === 'chamfer') {
+    P.push([-e, 0], [0, e], [0, H - rim], [-rim, H], [-w + rim, H], [-w, H - rim], [-w, b + fi], [-w - fi, b]);
+  } else {
+    P.push([0, 0], [0, H], [-w, H], [-w, b]);
+  }
+  return { P, innerOff: w + fi };
+}
+function lidProfile(p) {
+  const { wall: w, edge: e0, style, lidT: T, lipD, lipT, tol } = p;
+  const e = style === 'none' ? 0 : Math.min(e0, T * 0.8);
+  const a = w + tol, bb = w + tol + lipT;
+  const P = [];
+  if (style === 'round') P.push(...arcPts(-e, T - e, e, 90, 0, 8));
+  else if (style === 'chamfer') P.push([-e, T], [0, T - e]);
+  else P.push([0, T]);
+  P.push([0, 0], [-a, 0], [-a, -lipD], [-bb, -lipD], [-bb, 0]);
+  return { P, innerOff: bb };
+}
+function buildBox(p) {
+  const parts = [];
+  const { L, W, H, R } = p;
+  const bp = boxProfile(p);
+  parts.push(sweepRR(L, W, R, bp.P, 6));
+  if (p.dividers > 0) {
+    const inL = L - 2 * bp.innerOff + 2 * (bp.innerOff - p.wall);
+    const x0 = -L / 2 + p.wall, span = L - 2 * p.wall;
+    const t = Math.max(1.2, p.wall * 0.8);
+    for (let k = 1; k <= p.dividers; k++) {
+      const x = x0 + span * k / (p.dividers + 1);
+      parts.push(cuboid(x - t / 2, x + t / 2, -W / 2 + p.wall - 0.4, W / 2 - p.wall + 0.4, p.bottom - 0.2, H - Math.max(1, p.lid ? p.lipD + 0.5 : 1)));
+    }
+  }
+  if (p.lid) {
+    const lp = lidProfile(p);
+    let T = sweepRR(L, W, R, lp.P, 6);
+    const dx = L + 8;
+    T = T.map(([x, y, z]) => [x + dx, -y, -z + p.lidT]);
+    parts.push(orient(T));
+  }
+  return parts;
+}
+function minBoxRadius(p) {
+  const bp = boxProfile(p); let m = bp.innerOff + 0.3;
+  if (p.lid) m = Math.max(m, p.wall + p.tol + p.lipT + 0.3);
+  return m;
+}
+
+// ===== 2D polygon fillet =====
+function filletPolygon(pts, rad, n) {
+  const N = pts.length, out = [];
+  for (let i = 0; i < N; i++) {
+    const p = pts[i], a = pts[(i - 1 + N) % N], b = pts[(i + 1) % N];
+    const u = [a[0] - p[0], a[1] - p[1]], v = [b[0] - p[0], b[1] - p[1]];
+    const lu = Math.hypot(...u), lv = Math.hypot(...v);
+    if (rad <= 0 || lu < 1e-6 || lv < 1e-6) { out.push(p); continue; }
+    const uu = [u[0] / lu, u[1] / lu], vv = [v[0] / lv, v[1] / lv];
+    const cosT = Math.max(-1, Math.min(1, uu[0] * vv[0] + uu[1] * vv[1]));
+    const th = Math.acos(cosT);
+    if (th < 0.05 || th > Math.PI - 0.02) { out.push(p); continue; }
+    let t = rad / Math.tan(th / 2);
+    const tmax = 0.45 * Math.min(lu, lv);
+    let r = rad; if (t > tmax) { t = tmax; r = t * Math.tan(th / 2); }
+    const p1 = [p[0] + uu[0] * t, p[1] + uu[1] * t], p2 = [p[0] + vv[0] * t, p[1] + vv[1] * t];
+    const bis = [uu[0] + vv[0], uu[1] + vv[1]], lb = Math.hypot(...bis);
+    const dc = r / Math.sin(th / 2);
+    const c = [p[0] + bis[0] / lb * dc, p[1] + bis[1] / lb * dc];
+    let a1 = Math.atan2(p1[1] - c[1], p1[0] - c[0]), a2 = Math.atan2(p2[1] - c[1], p2[0] - c[0]);
+    let da = a2 - a1; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+    for (let k = 0; k <= n; k++) { const ang = a1 + da * k / n; out.push([c[0] + r * Math.cos(ang), c[1] + r * Math.sin(ang)]); }
+  }
+  return out;
+}
+// phone stand side profile (x = depth, y = height)
+function standProfile(p) {
+  const a = p.angle * Math.PI / 180, t = p.thick, s = p.slot;
+  const u = [Math.cos(a), Math.sin(a)], nv = [Math.sin(a), -Math.cos(a)];
+  const lipT = Math.max(4, t * 0.9);
+  const S0 = [lipT + s, t];
+  const B0 = [S0[0] + t * nv[0], S0[1] + t * nv[1]];
+  const front = k => [S0[0] + k * u[0], S0[1] + k * u[1]];
+  const back = k => [B0[0] + k * u[0], B0[1] + k * u[1]];
+  const backAtX = x => back((x - B0[0]) / u[0]);
+  const Lb = p.back;
+  const xff = B0[0] + 5;
+  const sIn = back(0.48 * Lb), sOut = back(0.70 * Lb);
+  const foot = 2.1 * t;
+  const D = Math.max(p.depth, sOut[0] + foot + 10, xff + foot + 8);
+  const pts = [[0, 0], [xff, 0], backAtX(xff), sIn, [D - foot, 0], [D, 0], [D, Math.min(4, t * 0.7)], sOut,
+               back(Lb), front(Lb), S0, [lipT, t], [lipT, p.lip], [0, p.lip]];
+  return { pts, D };
+}
+function polyArea(P) { let s = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; s += a[0] * b[1] - b[0] * a[1]; } return s / 2; }
+
+// ===== bitmap tracing (for text) =====
+function traceBitmap(inside, w, h) {
+  const key = (x, y) => y * (w + 1) + x;
+  const out = new Map();
+  const add = (x0, y0, x1, y1) => { const k = key(x0, y0); if (!out.has(k)) out.set(k, []); out.get(k).push([x0, y0, x1, y1]); };
+  const at = (x, y) => x >= 0 && y >= 0 && x < w && y < h && inside[y * w + x];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (!inside[y * w + x]) continue;
+    if (!at(x, y - 1)) add(x + 1, y, x, y);
+    if (!at(x - 1, y)) add(x, y, x, y + 1);
+    if (!at(x, y + 1)) add(x, y + 1, x + 1, y + 1);
+    if (!at(x + 1, y)) add(x + 1, y + 1, x + 1, y);
+  }
+  const loops = [];
+  for (const [k0, list] of out) {
+    while (list.length) {
+      const first = list.pop(); const loop = [[first[0], first[1]]];
+      let cur = first, guard = 0;
+      while (guard++ < 1e7) {
+        const k = key(cur[2], cur[3]);
+        if (cur[2] === first[0] && cur[3] === first[1] && (!out.get(k) || !out.get(k).length || true)) {
+          // closed if no better continuation from the start vertex belongs to this loop
+          const cand = out.get(k) || [];
+          if (!cand.length) break;
+        }
+        const cand = out.get(k);
+        if (!cand || !cand.length) break;
+        let pick = 0;
+        if (cand.length > 1) {
+          const dx = cur[2] - cur[0], dy = cur[3] - cur[1]; let best = -9;
+          cand.forEach((e, i) => { const ex = e[2] - e[0], ey = e[3] - e[1]; const cr = dx * ey - dy * ex, dt = dx * ex + dy * ey; const sc = cr > 0 ? 2 : (dt > 0 ? 1 : 0); if (sc > best) { best = sc; pick = i; } });
+        }
+        const nx = cand.splice(pick, 1)[0];
+        loop.push([nx[0], nx[1]]); cur = nx;
+        if (cur[2] === first[0] && cur[3] === first[1]) break;
+      }
+      if (loop.length > 3) loops.push(loop);
+    }
+  }
+  return loops;
+}
+function simplifyClosed(P, tol) {
+  if (P.length < 5) return P;
+  const dp = (pts) => {
+    const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1;
+    const st = [[0, pts.length - 1]];
+    while (st.length) {
+      const [i, j] = st.pop(); let md = 0, mi = -1;
+      const [ax, ay] = pts[i], [bx, by] = pts[j]; const L = Math.hypot(bx - ax, by - ay) || 1e-9;
+      for (let k = i + 1; k < j; k++) { const d = Math.abs((bx - ax) * (ay - pts[k][1]) - (ax - pts[k][0]) * (by - ay)) / L; if (d > md) { md = d; mi = k; } }
+      if (md > tol && mi > 0) { keep[mi] = 1; st.push([i, mi], [mi, j]); }
+    }
+    return pts.filter((_, k) => keep[k]);
+  };
+  // split at farthest point from start to avoid degenerate chord
+  let far = 0, fd = -1; for (let k = 1; k < P.length; k++) { const d = Math.hypot(P[k][0] - P[0][0], P[k][1] - P[0][1]); if (d > fd) { fd = d; far = k; } }
+  const A = dp(P.slice(0, far + 1)), B = dp(P.slice(far).concat([P[0]]));
+  return A.slice(0, -1).concat(B.slice(0, -1));
+}
+function pointInPoly(pt, P) {
+  let c = false;
+  for (let i = 0, j = P.length - 1; i < P.length; j = i++) {
+    if (((P[i][1] > pt[1]) !== (P[j][1] > pt[1])) && (pt[0] < (P[j][0] - P[i][0]) * (pt[1] - P[i][1]) / (P[j][1] - P[i][1]) + P[i][0])) c = !c;
+  }
+  return c;
+}
+function nestLoops(loops) {
+  const areas = loops.map(l => Math.abs(polyArea(l)));
+  const parent = loops.map(() => -1), depth = loops.map(() => 0);
+  loops.forEach((l, i) => {
+    let best = -1;
+    const probe = [(l[0][0] + l[1][0]) / 2, (l[0][1] + l[1][1]) / 2];
+    loops.forEach((m, j) => { if (i !== j && areas[j] > areas[i] && pointInPoly(probe, m)) { depth[i]++; if (best < 0 || areas[j] < areas[best]) best = j; } });
+    parent[i] = best;
+  });
+  const shapes = [];
+  loops.forEach((l, i) => { if (depth[i] % 2 === 0) shapes.push({ outer: l, holes: [] , idx: i}); });
+  loops.forEach((l, i) => { if (depth[i] % 2 === 1) { const s = shapes.find(s => s.idx === parent[i]); if (s) s.holes.push(l); } });
+  return shapes;
+}
+
+// ===== STL + ZIP =====
+function stlBinary(tris) { // tris: Float32Array of xyz per vertex
+  const n = tris.length / 9, buf = new ArrayBuffer(84 + n * 50), dv = new DataView(buf);
+  const head = 'Miqas 3D'; for (let i = 0; i < head.length; i++) dv.setUint8(i, head.charCodeAt(i));
+  dv.setUint32(80, n, true);
+  let o = 84;
+  for (let i = 0; i < n; i++) {
+    const b = i * 9, ax = tris[b], ay = tris[b + 1], az = tris[b + 2], bx = tris[b + 3], by = tris[b + 4], bz = tris[b + 5], cx = tris[b + 6], cy = tris[b + 7], cz = tris[b + 8];
+    let nx = (by - ay) * (cz - az) - (bz - az) * (cy - ay), ny = (bz - az) * (cx - ax) - (bx - ax) * (cz - az), nz = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+    const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+    for (const v of [nx, ny, nz, ax, ay, az, bx, by, bz, cx, cy, cz]) { dv.setFloat32(o, v, true); o += 4; }
+    dv.setUint16(o, 0, true); o += 2;
+  }
+  return new Uint8Array(buf);
+}
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipOne(name, data) {
+  const nm = new TextEncoder().encode(name), crc = crc32(data), sz = data.length;
+  const lh = new Uint8Array(30 + nm.length), lv = new DataView(lh.buffer);
+  lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true); lv.setUint16(6, 0, true); lv.setUint16(8, 0, true);
+  lv.setUint16(10, 0, true); lv.setUint16(12, 0x21, true); lv.setUint32(14, crc, true); lv.setUint32(18, sz, true); lv.setUint32(22, sz, true);
+  lv.setUint16(26, nm.length, true); lv.setUint16(28, 0, true); lh.set(nm, 30);
+  const cd = new Uint8Array(46 + nm.length), cv = new DataView(cd.buffer);
+  cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true); cv.setUint16(8, 0, true); cv.setUint16(10, 0, true);
+  cv.setUint16(12, 0, true); cv.setUint16(14, 0x21, true); cv.setUint32(16, crc, true); cv.setUint32(20, sz, true); cv.setUint32(24, sz, true);
+  cv.setUint16(28, nm.length, true); cv.setUint32(42, 0, true); cd.set(nm, 46);
+  const end = new Uint8Array(22), ev = new DataView(end.buffer);
+  ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, 1, true); ev.setUint16(10, 1, true); ev.setUint32(12, cd.length, true); ev.setUint32(16, lh.length + sz, true);
+  const out = new Uint8Array(lh.length + sz + cd.length + end.length);
+  out.set(lh, 0); out.set(data, lh.length); out.set(cd, lh.length + sz); out.set(end, lh.length + sz + cd.length);
+  return out;
+}
+
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import * as BGU from 'three/addons/utils/BufferGeometryUtils.js';
+
+const $ = id => document.getElementById(id);
+const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }, set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
+
+/* ---------- fonts ---------- */
+const FONTS = [
+  ['Cairo',900,'كايرو'], ['Tajawal',900,'تجوال'], ['Changa',800,'تشانجا'], ['El Messiri',700,'المسيري'],
+  ['Reem Kufi',700,'ريم كوفي'], ['Lalezar',400,'لاله‌زار'], ['Lemonada',700,'ليمونادة'], ['Marhey',700,'مرحي'],
+  ['Rakkas',400,'رقاص'], ['Aref Ruqaa',700,'رقعة'], ['Amiri',700,'أميري'], ['Mada',900,'مدى'],
+  ['Pacifico',400,'Pacifico'], ['Lobster',400,'Lobster'], ['Fredoka',700,'Fredoka'], ['Bebas Neue',400,'Bebas'],
+];
+
+/* ---------- parameters ---------- */
+const DEF = {
+  text:'الورشة', font:'Cairo', shape:'name', tsize:16, base:3, outline:true, ow:1.6, oh:0.8,
+  relief:1.2, margin:3, R:4, border:false, hole:'right', bevel:0.5,
+  cBase:'#2b2d2f', cOutline:'#e9e6df', cText:'#b8332e', cBorder:'#c99a3b'
+};
+const P = Object.assign({}, DEF, store.get('miqas.name') || {});
+if (!FONTS.some(f => f[0] === P.font)) P.font = 'Cairo';
+
+const SHAPE_UI = [
+  ['الشكل', [
+    {key:'shape',label:'شكل القاعدة',options:[['name','حسب الاسم'],['rect','لوحة مستطيلة'],['none','حروف فقط']]},
+    {key:'hole',label:'ثقب ميدالية',options:[['none','بدون'],['right','يمين'],['left','يسار']]},
+  ]],
+  ['المقاسات', [
+    {key:'tsize',label:'ارتفاع الكتابة',min:6,max:60,step:0.5},
+    {key:'base',label:'سماكة القاعدة',min:1.2,max:6,step:0.1, when:p=>p.shape!=='none'},
+    {key:'margin',label:'هامش القاعدة حول الاسم',min:1.5,max:10,step:0.5, when:p=>p.shape!=='none'},
+    {key:'R',label:'دوران زوايا اللوحة',min:0,max:15,step:0.5, when:p=>p.shape==='rect'},
+    {key:'bevel',label:'نعومة حواف القاعدة',min:0,max:1.5,step:0.1, when:p=>p.shape!=='none'},
+    {key:'relief',label:'بروز الكتابة',min:0.6,max:6,step:0.1},
+  ]],
+  ['الحدود والإطار', [
+    {key:'outline',label:'حدود حول الكتابة',options:[[true,'مع حدود'],[false,'بدون']]},
+    {key:'ow',label:'عرض الحدود',min:0.6,max:5,step:0.1, when:p=>p.outline},
+    {key:'oh',label:'سماكة طبقة الحدود',min:0.4,max:3,step:0.1, when:p=>p.outline},
+    {key:'border',label:'إطار اللوحة',options:[[true,'مع إطار'],[false,'بدون']], when:p=>p.shape==='rect'},
+  ]],
+];
+const FILAMENTS = [['#f2efe8','أبيض'],['#2b2d2f','أسود'],['#8d9296','رمادي'],['#b8332e','أحمر'],['#e2762c','برتقالي'],['#e8c33a','أصفر'],['#3f8a54','أخضر'],['#2f6fb5','أزرق'],['#6a4aa5','بنفسجي'],['#e48aa6','وردي'],['#c99a3b','ذهبي'],['#9aa3a8','فضي']];
+const LAYERS = [
+  {key:'cBase', name:'القاعدة', file:'1-base', when:p=>p.shape!=='none'},
+  {key:'cOutline', name:'الحدود', file:'2-outline', when:p=>p.outline},
+  {key:'cText', name:'الكتابة', file:'3-text', when:()=>true},
+  {key:'cBorder', name:'الإطار', file:'4-frame', when:p=>p.shape==='rect' && p.border},
+];
+
+let saveTimer;
+function changed(rerenderUI) {
+  if (rerenderUI) { renderShape(); renderColors(); }
+  rebuild(false);
+  clearTimeout(saveTimer); saveTimer = setTimeout(() => store.set('miqas.name', P), 400);
+}
+
+/* ---------- UI ---------- */
+$('text').value = P.text;
+$('text').oninput = () => { P.text = $('text').value; renderFonts(); changed(false); };
+function renderFonts() {
+  const box = $('fonts'); box.innerHTML = '';
+  const sample = (P.text || '').trim() || 'اسم';
+  for (const [fam, w, label] of FONTS) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'fontbtn';
+    b.setAttribute('aria-pressed', String(P.font === fam));
+    const s = document.createElement('span'); s.className = 'fs'; s.textContent = sample; s.style.fontFamily = `"${fam}", "Cairo", sans-serif`; s.style.fontWeight = w;
+    const l = document.createElement('span'); l.className = 'fl'; l.textContent = label;
+    b.append(s, l); b.title = fam;
+    b.onclick = () => { P.font = fam; [...box.children].forEach(c => c.setAttribute('aria-pressed', String(c === b))); changed(false); };
+    box.appendChild(b);
+  }
+}
+function renderShape() {
+  const sheet = $('shapeSheet'); sheet.innerHTML = '';
+  for (const [title, items] of SHAPE_UI) {
+    const vis = items.filter(it => !it.when || it.when(P)); if (!vis.length) continue;
+    const g = document.createElement('div'); g.className = 'group';
+    const h = document.createElement('h2'); h.textContent = title; g.appendChild(h);
+    const rows = document.createElement('div'); rows.className = 'rows';
+    for (const it of vis) {
+      const row = document.createElement('div'); row.className = 'row'; const id = 'p-' + it.key;
+      const lab = document.createElement('label'); lab.textContent = it.label; lab.htmlFor = id; row.appendChild(lab);
+      if (it.options) {
+        row.style.gridTemplateColumns = '1fr';
+        const seg = document.createElement('div'); seg.className = 'seg'; seg.id = id;
+        for (const [val, txt] of it.options) {
+          const b = document.createElement('button'); b.type = 'button'; b.textContent = txt;
+          b.setAttribute('aria-pressed', String(P[it.key] === val));
+          b.onclick = () => { P[it.key] = val; changed(true); };
+          seg.appendChild(b);
+        }
+        row.appendChild(seg);
+      } else {
+        const num = document.createElement('div'); num.className = 'num';
+        const n = document.createElement('input'); n.type = 'number'; n.inputMode = 'decimal'; n.min = it.min; n.max = it.max; n.step = it.step; n.value = P[it.key]; n.id = id + '-n'; n.setAttribute('aria-label', it.label);
+        const u = document.createElement('span'); u.textContent = 'مم'; num.append(n, u); row.appendChild(num);
+        const r = document.createElement('input'); r.type = 'range'; r.min = it.min; r.max = it.max; r.step = it.step; r.value = P[it.key]; r.id = id;
+        r.oninput = () => { P[it.key] = +r.value; n.value = r.value; changed(false); };
+        n.onchange = () => { let v = +n.value; if (isNaN(v)) v = DEF[it.key]; v = Math.min(it.max, Math.max(it.min, v)); P[it.key] = v; n.value = v; r.value = v; changed(false); };
+        row.appendChild(r);
+      }
+      rows.appendChild(row);
+    }
+    g.appendChild(rows); sheet.appendChild(g);
+  }
+  const msg = document.createElement('p'); msg.className = 'note'; msg.id = 'msg'; sheet.appendChild(msg);
+}
+function renderColors() {
+  const box = $('colors'); box.innerHTML = '';
+  for (const L of LAYERS) {
+    if (!L.when(P)) continue;
+    const row = document.createElement('div'); row.className = 'colorrow';
+    const lab = document.createElement('span'); lab.className = 'cl'; lab.textContent = L.name; row.appendChild(lab);
+    const sw = document.createElement('div'); sw.className = 'swrow';
+    for (const [c, n] of FILAMENTS) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'sw'; b.style.background = c; b.title = n; b.setAttribute('aria-label', `${L.name}: ${n}`);
+      b.setAttribute('aria-pressed', String(P[L.key].toLowerCase() === c));
+      b.onclick = () => { P[L.key] = c; setColors(); [...sw.querySelectorAll('.sw')].forEach(x => x.setAttribute('aria-pressed', String(x === b))); pick.value = c; changed(false); };
+      sw.appendChild(b);
+    }
+    const pick = document.createElement('input'); pick.type = 'color'; pick.className = 'pick'; pick.value = P[L.key]; pick.id = 'c-' + L.key; pick.setAttribute('aria-label', `${L.name}: لون مخصص`);
+    pick.oninput = () => { P[L.key] = pick.value; setColors(); [...sw.querySelectorAll('.sw')].forEach(x => x.setAttribute('aria-pressed', 'false')); changed(false); };
+    sw.appendChild(pick);
+    row.appendChild(sw); box.appendChild(row);
+  }
+}
+
+/* ---------- three.js scene ---------- */
+const stage = $('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 0.5, 4000); camera.up.set(0, 0, 1);
+const controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.dampingFactor = 0.08;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f86, 1.1));
+const sun = new THREE.DirectionalLight(0xffffff, 1.7); sun.position.set(-120, -160, 260); scene.add(sun);
+const fill = new THREE.DirectionalLight(0xffffff, 0.5); fill.position.set(160, 120, 80); scene.add(fill);
+const bed = new THREE.Group(); scene.add(bed);
+function isDark() { const t = document.documentElement.dataset.theme; return t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches); }
+function buildBed() {
+  bed.clear(); const dark = isDark();
+  scene.background = new THREE.Color(dark ? 0x222924 : 0xd9ddd5);
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(256, 256), new THREE.MeshStandardMaterial({ color: dark ? 0x2a2f2b : 0xc9cdc4, roughness: 0.95 }));
+  plate.position.z = -0.05; bed.add(plate);
+  const grid = new THREE.GridHelper(256, 32, dark ? 0x4a524c : 0xa9afa6, dark ? 0x353c37 : 0xb9bfb6); grid.rotation.x = Math.PI / 2; bed.add(grid);
+}
+buildBed();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', buildBed);
+new MutationObserver(buildBed).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+const mats = {}; for (const L of LAYERS) mats[L.key] = new THREE.MeshStandardMaterial({ roughness: 0.55 });
+function setColors() { for (const L of LAYERS) mats[L.key].color.set(P[L.key]); }
+setColors();
+const model = new THREE.Group(); scene.add(model);
+function resize() { const r = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(stage); resize();
+(function loop(){ controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop); })();
+
+/* ---------- raster layers -> shapes ---------- */
+function shapeFrom(pts, holes = []) {
+  const s = new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], p[1])));
+  for (const h of holes) s.holes.push(new THREE.Path(h.map(p => new THREE.Vector2(p[0], p[1]))));
+  return s;
+}
+function extrude(shapes, depth, bevel) {
+  const opt = { depth, curveSegments: 6, bevelEnabled: false };
+  if (bevel > 0.05) Object.assign(opt, { depth: Math.max(0.05, depth - 2 * bevel), bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelOffset: -bevel, bevelSegments: 3 });
+  const g = new THREE.ExtrudeGeometry(shapes, opt);
+  if (opt.bevelEnabled) g.translate(0, 0, bevel);
+  return g;
+}
+async function ensureFont(fam, w, text) {
+  try { await document.fonts.load(`${w} 100px "${fam}"`, text); } catch (e) {}
+}
+function roundRectPath(ctx, x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, w / 2, h / 2));
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function maskToShapes(ctx, w, h, toMM) {
+  const d = ctx.getImageData(0, 0, w, h).data, ins = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) ins[i] = d[i * 4 + 3] > 127 ? 1 : 0;
+  const loops = traceBitmap(ins, w, h).map(l => simplifyClosed(l, 0.6)).filter(l => l.length >= 3 && Math.abs(polyArea(l)) > 4);
+  return nestLoops(loops).map(n => shapeFrom(n.outer.map(toMM), n.holes.map(l => l.map(toMM))));
+}
+function buildLayers(text, fontFam, weight) {
+  const note = [];
+  const font = px => `${weight} ${px}px "${fontFam}", "Cairo", sans-serif`;
+  const probe = document.createElement('canvas').getContext('2d');
+  probe.font = font(100); probe.direction = 'rtl';
+  const m = probe.measureText(text);
+  const inkH = (m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) || 100;
+  const inkW = (m.actualBoundingBoxLeft + m.actualBoundingBoxRight) || m.width;
+  // choose font px so the long side stays within ~3600 px
+  const s0 = P.tsize / inkH;           // mm per px at 100px font
+  let px = 220; const maxSidePx = 3400;
+  const extraMM = (P.shape !== 'none' ? P.margin : 0) + (P.outline ? P.ow : 0) + 14;
+  const estW = inkW * px / 100 + 2 * extraMM / (s0 * 100 / px);
+  if (estW > maxSidePx) px = Math.max(60, px * maxSidePx / estW);
+  const s = s0 * 100 / px;              // mm per px at chosen size
+  const padPx = Math.ceil(extraMM / s);
+  const W = Math.ceil(inkW * px / 100 + 2 * padPx), H = Math.ceil(inkH * px / 100 + 2 * padPx);
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  const bx = padPx + m.actualBoundingBoxLeft * px / 100, by = padPx + m.actualBoundingBoxAscent * px / 100;
+  const cx = W / 2, cy = H / 2;
+  const toMM = ([x, y]) => [(x - cx) * s, -(y - cy) * s];
+  const mm = v => v / s;
+  const setup = () => { ctx.clearRect(0, 0, W, H); ctx.font = font(px); ctx.direction = 'ltr'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#fff'; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; };
+  // text is drawn left-aligned at ink box; direction rtl for shaping
+  const drawText = (strokeMM) => {
+    ctx.save(); ctx.direction = 'rtl'; ctx.textAlign = 'left';
+    const m2 = ctx.measureText(text);
+    const x = padPx + m2.actualBoundingBoxLeft, y = padPx + m2.actualBoundingBoxAscent;
+    if (strokeMM > 0) { ctx.lineWidth = 2 * mm(strokeMM); ctx.strokeText(text, x, y); }
+    ctx.fillText(text, x, y); ctx.restore();
+  };
+  const textBox = { x: padPx, y: padPx, w: W - 2 * padPx, h: H - 2 * padPx };
+  const holeR = 2.3, ring = 2.4;
+  const holeSide = P.hole === 'none' ? 0 : (P.hole === 'right' ? 1 : -1);
+  const layers = {};
+
+  setup(); drawText(0); layers.cText = maskToShapes(ctx, W, H, toMM);
+  if (P.outline) { setup(); drawText(P.ow); layers.cOutline = maskToShapes(ctx, W, H, toMM); }
+
+  let holeC = null;
+  if (P.shape === 'name') {
+    setup(); drawText((P.outline ? P.ow : 0) + P.margin);
+    if (holeSide) {
+      const r = mm(holeR + ring), extX = mm((P.outline ? P.ow : 0) + P.margin);
+      const hx = holeSide > 0 ? textBox.x + textBox.w + extX - mm(0.5) : textBox.x - extX + mm(0.5);
+      holeC = [hx, cy];
+      ctx.beginPath(); ctx.arc(hx, cy, r, 0, 2 * Math.PI); ctx.fill();
+      ctx.fillRect(Math.min(hx, cx), cy - r * 0.7, Math.abs(hx - cx), r * 1.4);
+      ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(hx, cy, mm(holeR), 0, 2 * Math.PI); ctx.fill(); ctx.globalCompositeOperation = 'source-over';
+    }
+    layers.cBase = maskToShapes(ctx, W, H, toMM);
+  } else if (P.shape === 'rect') {
+    setup();
+    const ext = mm((P.outline ? P.ow : 0) + P.margin + (P.border ? 2.6 : 0));
+    let x0 = textBox.x - ext, x1 = textBox.x + textBox.w + ext;
+    const holeExtra = mm(2 * holeR + 3);
+    if (holeSide > 0) x1 += holeExtra; if (holeSide < 0) x0 -= holeExtra;
+    const y0 = textBox.y - ext, y1 = textBox.y + textBox.h + ext;
+    roundRectPath(ctx, x0, y0, x1 - x0, y1 - y0, mm(P.R)); ctx.fill();
+    if (holeSide) {
+      const hx = holeSide > 0 ? x1 - mm(holeR + 2) : x0 + mm(holeR + 2); holeC = [hx, cy];
+      ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(hx, cy, mm(holeR), 0, 2 * Math.PI); ctx.fill(); ctx.globalCompositeOperation = 'source-over';
+    }
+    layers.cBase = maskToShapes(ctx, W, H, toMM);
+    if (P.border) {
+      setup(); const ins = mm(1.2), bw = mm(1.2);
+      let bx0 = x0 + ins, bx1 = x1 - ins;
+      if (holeSide > 0) bx1 -= holeExtra; if (holeSide < 0) bx0 += holeExtra;
+      ctx.lineWidth = bw; roundRectPath(ctx, bx0 + bw / 2, y0 + ins + bw / 2, bx1 - bx0 - bw, y1 - y0 - 2 * ins - bw, Math.max(0, mm(P.R) - ins)); ctx.stroke();
+      layers.cBorder = maskToShapes(ctx, W, H, toMM);
+    }
+  }
+  if (P.shape === 'none' && !P.outline) note.push('بدون قاعدة ولا حدود، تأكد إن حروف الاسم متصلة وإلا بتطلع قطع منفصلة.');
+  return { layers, note };
+}
+const cache = new Map();
+function cachedLayers(text, fam, w) {
+  const k = JSON.stringify([text, fam, w, P.tsize, P.shape, P.hole, P.outline, P.ow, P.margin, P.R, P.border]);
+  if (cache.has(k)) return cache.get(k);
+  const r = buildLayers(text, fam, w); if (cache.size > 12) cache.clear(); cache.set(k, r); return r;
+}
+
+/* ---------- rebuild ---------- */
+let pending = false, firstFrame = true, buildId = 0;
+async function rebuild(resetCam) {
+  if (pending && !resetCam) return; pending = true;
+  await new Promise(r => requestAnimationFrame(r)); pending = false;
+  const id = ++buildId;
+  const text = (P.text || '').trim(), fdef = FONTS.find(f => f[0] === P.font) || FONTS[0];
+  const msg = $('msg');
+  if (!text) { model.clear(); $('dims').textContent = '—'; if (msg) msg.textContent = 'اكتب اسم عشان يظهر المجسم.'; return; }
+  await ensureFont(fdef[0], fdef[1], text);
+  if (id !== buildId) return;
+  let res;
+  try { res = cachedLayers(text, fdef[0], fdef[1]); }
+  catch (e) { console.error(e); if (msg) { msg.className = 'note warn'; msg.textContent = 'ما قدرت أبني الشكل بهالقيم، جرّب تغيّر المقاسات شوي.'; } return; }
+  const hasBase = P.shape !== 'none';
+  const zBase = hasBase ? P.base : 0;
+  const zOut = P.outline ? zBase + P.oh : zBase;
+  const parts = [];
+  try {
+    if (hasBase && res.layers.cBase?.length) parts.push(['cBase', extrude(res.layers.cBase, P.base, Math.min(P.bevel, P.base / 3))]);
+    if (P.outline && res.layers.cOutline?.length) { const g = extrude(res.layers.cOutline, P.oh, 0); g.translate(0, 0, zBase - (hasBase ? 0.02 : 0)); parts.push(['cOutline', g]); }
+    if (res.layers.cText?.length) { const g = extrude(res.layers.cText, P.relief, 0); g.translate(0, 0, zOut - (zOut > 0 ? 0.02 : 0)); parts.push(['cText', g]); }
+    if (res.layers.cBorder?.length) { const g = extrude(res.layers.cBorder, P.relief, 0); g.translate(0, 0, zBase - 0.02); parts.push(['cBorder', g]); }
+  } catch (e) { console.error(e); if (msg) { msg.className = 'note warn'; msg.textContent = 'صار خطأ في بناء الشكل، جرّب خط ثاني أو غيّر المقاسات.'; } return; }
+  if (id !== buildId) return;
+  for (const m of model.children) m.geometry.dispose();
+  model.clear();
+  const box = new THREE.Box3();
+  for (const [, g] of parts) { g.computeBoundingBox(); box.union(g.boundingBox); }
+  const off = new THREE.Vector3(-(box.min.x + box.max.x) / 2, -(box.min.y + box.max.y) / 2, -box.min.z);
+  for (const [key, g] of parts) {
+    g.translate(off.x, off.y, off.z);
+    let vis; try { vis = BGU.toCreasedNormals(g.clone(), Math.PI / 5); } catch (e) { vis = g.clone(); vis.computeVertexNormals(); }
+    const mesh = new THREE.Mesh(vis, mats[key]); mesh.userData = { src: g, key }; model.add(mesh);
+  }
+  const size = box.getSize(new THREE.Vector3());
+  $('dims').textContent = `${size.x.toFixed(1)} × ${size.y.toFixed(1)} × ${size.z.toFixed(1)} mm`;
+  const fits = size.x <= 250 && size.y <= 250;
+  $('fit').textContent = fits ? `${parts.length} ${parts.length === 1 ? 'لون' : 'ألوان'}` : 'أكبر من سرير الطابعة';
+  $('fit').className = 'tag' + (fits ? '' : ' warn');
+  if (msg) { msg.className = 'note'; msg.textContent = res.note.join(' '); }
+  if (resetCam || firstFrame) frame(size);
+  firstFrame = false;
+}
+let lastSize;
+function frame(size = lastSize) {
+  if (!size) return; lastSize = size; const r = Math.max(size.x, size.y, 30);
+  controls.target.set(0, 0, size.z / 2);
+  camera.position.set(-r * 0.15, -r * 1.25, r * 0.95); controls.update();
+}
+$('resetView').onclick = () => frame();
+
+/* ---------- export ---------- */
+function zipMany(files) {
+  const enc = new TextEncoder(), locals = [], cents = []; let offset = 0;
+  for (const { name, data } of files) {
+    const z = zipOne(name, data);
+    const nm = enc.encode(name), lhLen = 30 + nm.length, cdLen = 46 + nm.length;
+    const local = z.subarray(0, lhLen + data.length);
+    const cd = z.slice(lhLen + data.length, lhLen + data.length + cdLen);
+    new DataView(cd.buffer).setUint32(42, offset, true);
+    locals.push(local); cents.push(cd); offset += local.length;
+  }
+  const cdSize = cents.reduce((a, c) => a + c.length, 0);
+  const end = new Uint8Array(22), ev = new DataView(end.buffer);
+  ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, files.length, true); ev.setUint16(10, files.length, true); ev.setUint32(12, cdSize, true); ev.setUint32(16, offset, true);
+  return new Blob([...locals, ...cents, end]);
+}
+const downloads = { async save({ filename, data }) {
+  const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data]));
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000); return { status: 'saved' };
+} };
+$('exportBtn').onclick = async () => {
+  if (!downloads || !model.children.length) return;
+  const dims = $('dims').textContent.replace(' mm', '').split(' × ').map(v => Math.round(+v)).join('x');
+  const ascii = (P.text || '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase();
+  const base = `name-${ascii ? ascii + '-' : ''}${dims}`;
+  const files = [], lines = ['Miqas name plate - colours / الألوان', ''];
+  for (const m of model.children) {
+    const L = LAYERS.find(l => l.key === m.userData.key);
+    const g = m.userData.src.index ? m.userData.src.toNonIndexed() : m.userData.src;
+    files.push({ name: `${base}-${L.file}.stl`, data: stlBinary(g.attributes.position.array) });
+    const fil = FILAMENTS.find(f => f[0] === P[L.key].toLowerCase());
+    lines.push(`${L.file}.stl  ->  ${L.name}: ${fil ? fil[1] + ' ' : ''}${P[L.key]}`);
+  }
+  lines.push('', 'Import all STL files together in Bambu Studio and answer "Yes" to load as one object with multiple parts.');
+  files.push({ name: `${base}-colors.txt`, data: new TextEncoder().encode(lines.join('\n')) });
+  const btn = $('exportBtn'), note = $('exportNote');
+  btn.disabled = true; note.textContent = 'أجهّز الملف…';
+  try {
+    await downloads.save({ filename: base + '.zip', data: zipMany(files) });
+    note.textContent = `تم الحفظ: ${base}.zip`;
+  } catch (e) {
+    const code = e && e.code;
+    note.textContent = code === 'declined' ? 'ألغيت الحفظ. اضغط تصدير مرة ثانية متى ما بغيت.'
+      : code === 'rate_limited' ? 'فيه نافذة حفظ مفتوحة، انتظر شوي وحاول مرة ثانية.'
+      : 'ما قدرت أحفظ الملف هنا.';
+  } finally { btn.disabled = false; }
+};
+
+renderFonts(); renderShape(); renderColors(); rebuild(true);
+</script>
+
+</body>
+</html>
